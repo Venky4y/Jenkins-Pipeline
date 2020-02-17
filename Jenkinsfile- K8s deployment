@@ -1,0 +1,45 @@
+Ref: https://medium.com/containerum/configuring-ci-cd-on-kubernetes-with-jenkins-89eab7234270
+
+     https://www.magalix.com/blog/create-a-ci/cd-pipeline-with-kubernetes-and-jenkins
+
+
+node{
+
+#Step 1 — Here we define some variables:
+
+//default namespace on k84
+  def Namespace = "default"
+// image name which will be pushed to docker registry
+  def ImageName = "sayarapp/sayarapp"
+// Creds of docker registry
+  def Creds = "2dfd9d0d-a300-49ee-aaaf-0a3efcaa5279"
+
+  try{
+#Step 2 — Pull/Clone updates from our version control:
+  stage('Checkout'){
+      git 'https://mAyman2612@bitbucket.org/mAyman2612/ci-cd-k8s.git'
+      sh "git rev-parse --short HEAD > .git/commit-id"
+      imageTag= readFile('.git/commit-id').trim()
+}
+
+#Step 3 — Run Unit Tests:
+stage('RUN Unit Tests'){
+      sh "npm install"
+      sh "npm test"
+  }
+
+#Step 4 — Docker Build and Push to docker registry:
+  stage('Docker Build, Push'){
+    withDockerRegistry([credentialsId: "${Creds}", url: 'https://index.docker.io/v1/']) {
+      sh "docker build -t ${ImageName}:${imageTag} ."
+      sh "docker push ${ImageName}"
+        }
+}
+
+#Step 5 — Call the Ansible playbook to deploy on K8s:
+    stage('Deploy on K8s'){
+sh "ansible-playbook /var/lib/jenkins/ansible/sayarapp-deploy/deploy.yml  --user=jenkins --extra-vars ImageName=${ImageName} --extra-vars imageTag=${imageTag} --extra-vars Namespace=${Namespace}"
+    }
+     } catch (err) {
+      currentBuild.result = 'FAILURE'
+    }
