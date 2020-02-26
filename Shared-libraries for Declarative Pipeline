@@ -42,7 +42,7 @@ stage('Git Checkout') {
 
 full declarative pipeline code:
 
-@Library('jenkins-library@master')
+@Library('jenkins-library@master') _
 pipeline {
     agent any
     stages {
