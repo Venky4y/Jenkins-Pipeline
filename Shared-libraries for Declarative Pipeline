@@ -1,0 +1,59 @@
+jenkins-shared-library
+|____vars
+|____src
+|____resources
+
+Create Custom Shared Library Code:
+Generate Pipeline Syntax Using Snippet Generator: we need to select Git and the syntax gets generated as below
+checkout([
+    $class: 'GitSCM', 
+    branches: [[name: '*/master']], 
+    doGenerateSubmoduleConfigurations: false, 
+    extensions: [], 
+    submoduleCfg: [], 
+    userRemoteConfigs: [[url: 'https://github.com/spring-projects/spring-petclinic.git']]
+    ])
+    
+    Create a Shared Library For Git Checkout:
+    Create a file named gitCheckout.groovy under vars folder.
+    def call(Map stageParams) {
+ 
+    checkout([
+        $class: 'GitSCM',
+        branches: [[name:  stageParams.branch ]],
+        userRemoteConfigs: [[ url: stageParams.url ]]
+    ])
+  }
+  def call(Map stageParams) – A simple call function which accepts a Map as an argument. From the pipeline stage, we will pass multiple arguments which get passed as a map to the shared library.
+stageParams.branch – its the branch parameter which comes from the pipeline stage and we use stageParams to access that variable in the shared library.
+
+Add Github Shared Library Repo to Jenkins:
+Step 1: Go to Manage Jenkins –> Configure System
+
+Step 2: Find the Global Pipeline Libraries section and add your repo details and configurations as shown below.
+
+Use Checkout Library in Declarative Pipeline:
+stage('Git Checkout') {
+    gitCheckout(
+        branch: "master",
+        url: "https://github.com/spring-projects/spring-petclinic.git"
+    )
+}
+
+full declarative pipeline code:
+
+@Library('jenkins-library@master')
+pipeline {
+    agent any
+    stages {
+        stage('Git Checkout') {
+            steps {
+            gitCheckout(
+                branch: "master",
+                url: "https://github.com/spring-projects/spring-petclinic.git"
+            )
+            }
+    }
+    }
+}
+
