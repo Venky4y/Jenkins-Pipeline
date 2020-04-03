@@ -1,3 +1,5 @@
+Ref: https://docs.bitnami.com/tutorials/create-ci-cd-pipeline-jenkins-gke/
+
 pipeline {
     agent any
     environment {
